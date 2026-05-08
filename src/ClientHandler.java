@@ -30,6 +30,16 @@ public class ClientHandler implements Runnable {
 
             username = in.readLine();
 
+            if (username == null) {
+                return;
+            }
+
+            username = username.trim();
+
+            if (username.isEmpty()) {
+                username = "Guest";
+            }
+
             out.println("----- Chat History -----");
 
             for (String oldMessage : Server.getChatHistory()) {
@@ -91,6 +101,8 @@ public class ClientHandler implements Runnable {
     }
 
     public void sendMessage(String message) {
-        out.println(message);
+        if (out != null) {
+            out.println(message);
+        }
     }
 }
