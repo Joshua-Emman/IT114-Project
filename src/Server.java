@@ -14,6 +14,12 @@ public class Server {
     // stores all chat messages so new users can see previous messages
     private static final List<String> chatHistory = Collections.synchronizedList(new ArrayList<>());
 
+    // keeps track of how many suspicious messages each IP has sent
+    private static final Map<String, Integer> strikes = Collections.synchronizedMap(new HashMap<>());
+
+    // stores IPs that are banned after 3 strikes
+    private static final Set<String> bannedIPs = Collections.synchronizedSet(new HashSet<>());
+
     public static void main(String[] args) {
         // Load the suspicious words before starting the server
         loadBlacklist();
@@ -27,12 +33,23 @@ public class Server {
             // Keep accepting new clients forever
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("A client connected: " + clientSocket.getInetAddress());
 
-                // create a handler for this client
-                ClientHandler handler = new ClientHandler(clientSocket);
+                String clientIP = clientSocket.getInetAddress().getHostAddress();
 
-                clients.add(handler);
+                if (isBanned(clientIP)) {
+                    PrintWriter tempOut = new PrintWriter(clientSocket.getOutputStream(), true);
+                    tempOut.println("You are banned from this chat.");
+                    clientSocket.close();
+                    System.out.println("Blocked banned IP: " + clientIP);
+                    continue;
+                }
+
+            System.out.println("A client connected: " + clientSocket.getInetAddress());
+
+            // create a handler for this client
+            ClientHandler handler = new ClientHandler(clientSocket, clientIP);
+
+            clients.add(handler);
 
                 // Start a new thread for this client
                 Thread thread = new Thread(handler);
@@ -99,4 +116,22 @@ public class Server {
     public static void removeClient(ClientHandler client) {
         clients.remove(client);
     }
+
+    public static int addStrike(String ip) {
+        int currentStrikes = strikes.getOrDefault(ip, 0) + 1;
+
+        strikes.put(ip, currentStrikes);
+
+        if (currentStrikes >= 3) {
+            bannedIPs.add(ip);
+            System.out.println("IP banned: " + ip);
+        }
+
+        return currentStrikes;
+    }
+
+    public static boolean isBanned(String ip) {
+        return bannedIPs.contains(ip);
+    }
+
 }

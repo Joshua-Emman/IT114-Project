@@ -11,8 +11,11 @@ public class ClientHandler implements Runnable {
 
     private String username;
 
-    public ClientHandler(Socket socket) {
+    private String clientIP;
+
+    public ClientHandler(Socket socket, String clientIP) {
         this.socket = socket;
+        this.clientIP = clientIP;
     }
 
     @Override
@@ -45,7 +48,17 @@ public class ClientHandler implements Runnable {
                 }
 
                 if (Server.containsBlacklistedWord(message)) {
-                    Server.broadcast("[GLOBAL WARNING] Suspicious message detected from " + username);
+                    int strikeCount = Server.addStrike(clientIP);
+
+                    Server.broadcast("[GLOBAL WARNING] Suspicious message detected from " + username + " (" + strikeCount + "/3 strikes)");
+
+                    out.println("Your message was flagged and was not sent.");
+
+                    if (strikeCount >= 3) {
+                        out.println("You have been banned for sending too many suspicious messages.");
+                        break;
+                    }
+
                 } else {
                     Server.broadcast(username + ": " + message);
                 }
