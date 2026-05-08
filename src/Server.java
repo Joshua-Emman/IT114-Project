@@ -44,12 +44,12 @@ public class Server {
                     continue;
                 }
 
-            System.out.println("A client connected: " + clientSocket.getInetAddress());
+                System.out.println("A client connected: " + clientSocket.getInetAddress());
 
-            // create a handler for this client
-            ClientHandler handler = new ClientHandler(clientSocket, clientIP);
+                // create a handler for this client
+                ClientHandler handler = new ClientHandler(clientSocket, clientIP);
 
-            clients.add(handler);
+                clients.add(handler);
 
                 // Start a new thread for this client
                 Thread thread = new Thread(handler);
@@ -108,10 +108,10 @@ public class Server {
     }
 
     public static List<String> getChatHistory() {
-    synchronized (chatHistory) {
-        return new ArrayList<>(chatHistory);
+        synchronized (chatHistory) {
+            return new ArrayList<>(chatHistory);
+        }
     }
-}
 
     public static void removeClient(ClientHandler client) {
         clients.remove(client);
