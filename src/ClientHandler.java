@@ -11,8 +11,11 @@ public class ClientHandler implements Runnable {
 
     private String username;
 
-    public ClientHandler(Socket socket) {
+    private String clientIP;
+
+    public ClientHandler(Socket socket, String clientIP) {
         this.socket = socket;
+        this.clientIP = clientIP;
     }
 
     @Override
@@ -27,17 +30,52 @@ public class ClientHandler implements Runnable {
 
             username = in.readLine();
 
+            if (username == null) {
+                return;
+            }
+
+            username = username.trim();
+
+            if (username.isEmpty()) {
+                username = "Guest";
+            }
+
+            out.println("----- Chat History -----");
+
+            for (String oldMessage : Server.getChatHistory()) {
+                out.println(oldMessage);
+            }
+
+            out.println("------------------------");
+
             Server.broadcast(username + " joined the chat.");
 
             String message;
 
             while ((message = in.readLine()) != null) {
+                message = message.trim();
+
                 if (message.equalsIgnoreCase("/quit")) {
                     break;
                 }
 
+                if (message.isEmpty()) {
+                    out.println("Message cannot be blank.");
+                    continue;
+                }
+
                 if (Server.containsBlacklistedWord(message)) {
-                    Server.broadcast("[GLOBAL WARNING] Suspicious message detected from " + username);
+                    int strikeCount = Server.addStrike(clientIP);
+
+                    Server.broadcast("[GLOBAL WARNING] Suspicious message detected from " + username + " (" + strikeCount + "/3 strikes)");
+
+                    out.println("Your message was flagged and was not sent.");
+
+                    if (strikeCount >= 3) {
+                        out.println("You have been banned for sending too many suspicious messages.");
+                        break;
+                    }
+
                 } else {
                     Server.broadcast(username + ": " + message);
                 }
@@ -63,6 +101,8 @@ public class ClientHandler implements Runnable {
     }
 
     public void sendMessage(String message) {
-        out.println(message);
+        if (out != null) {
+            out.println(message);
+        }
     }
 }
