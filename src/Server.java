@@ -11,6 +11,9 @@ public class Server {
     // stores the blacklisted words
     private static final List<String> blacklist = new ArrayList<>();
 
+    // stores all chat messages so new users can see previous messages
+    private static final List<String> chatHistory = Collections.synchronizedList(new ArrayList<>());
+
     public static void main(String[] args) {
         // Load the suspicious words before starting the server
         loadBlacklist();
@@ -74,12 +77,24 @@ public class Server {
     }
 
     public static void broadcast(String message) {
+        addToHistory(message);
+
         synchronized (clients) {
             for (ClientHandler client : clients) {
                 client.sendMessage(message);
             }
         }
     }
+
+    public static void addToHistory(String message) {
+        chatHistory.add(message);
+    }
+
+    public static List<String> getChatHistory() {
+    synchronized (chatHistory) {
+        return new ArrayList<>(chatHistory);
+    }
+}
 
     public static void removeClient(ClientHandler client) {
         clients.remove(client);

@@ -27,6 +27,14 @@ public class ClientHandler implements Runnable {
 
             username = in.readLine();
 
+            out.println("----- Chat History -----");
+
+            for (String oldMessage : Server.getChatHistory()) {
+                out.println(oldMessage);
+            }
+
+            out.println("------------------------");
+
             Server.broadcast(username + " joined the chat.");
 
             String message;
