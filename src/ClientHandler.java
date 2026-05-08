@@ -43,8 +43,15 @@ public class ClientHandler implements Runnable {
             String message;
 
             while ((message = in.readLine()) != null) {
+                message = message.trim();
+
                 if (message.equalsIgnoreCase("/quit")) {
                     break;
+                }
+
+                if (message.isEmpty()) {
+                    out.println("Message cannot be blank.");
+                    continue;
                 }
 
                 if (Server.containsBlacklistedWord(message)) {
